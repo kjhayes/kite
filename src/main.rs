@@ -31,7 +31,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let mut editor = Editor::new(args.file_name.clone());
-    editor.extension = args.file_name.chars().rev().take_while(|c| *c != '.').collect::<Vec<_>>().into_iter().rev().collect();
     editor.theme_name = if let Some(theme) = args.theme {theme.clone()} else {"Solarized (dark)".to_string()};
     if let Some(theme_folder) = args.extra_themes_folder {editor.theme_set.add_from_folder(theme_folder).unwrap();}
 

@@ -19,13 +19,13 @@ pub struct Editor {
     path: String,
     pub header_msg: String,
 
-    pub extension: String,
     pub theme_name: String,
 
     lines: Vec<String>,
 
     text_size: (usize, usize),
     display_top_line_index: usize,
+    display_rightmost_index: usize,
     display_shifted_by_cursor: bool,
 
     cursor_line_index: usize,
@@ -52,15 +52,15 @@ impl Default for Editor {
             path: "Untitled".to_string(),
             header_msg: "".to_string(),
 
-            extension: "".to_string(),
             theme_name: "".to_string(),
 
             lines: Vec::<String>::new(),
             
             text_size: (0,0),
             display_top_line_index: 0,
+            display_rightmost_index: 0,
             display_shifted_by_cursor: true,
-            
+
             cursor_line_index: 0,
             cursor_index: 0,
             cursor_prefered_index: 0,

@@ -80,7 +80,7 @@ impl Editor {
         where W: Write
     {
         let syntax = 
-            self.syntax_set.find_syntax_by_extension(&self.extension).unwrap_or(
+            self.syntax_set.find_syntax_for_file(&self.path).unwrap().unwrap_or(
             self.syntax_set.find_syntax_by_extension("txt").unwrap_or_else(
             || {
                 eprint!("Critical Error Loading Highlighter");
@@ -103,19 +103,32 @@ impl Editor {
             .take_while(|(file_line_num, _)| *file_line_num < (self.display_top_line_index + self.text_size.1))
         {   
             let mut line = line.clone();
-            let disp_len = line.graphemes(true).count();
+            let grapheme_count = line.graphemes(true).count();
+            
+            let disp_len = if grapheme_count > self.display_rightmost_index {
+                grapheme_count - self.display_rightmost_index
+            } else {0};
+
             if disp_len < self.text_size.0 {
                 line.push_str(std::iter::repeat(" ").take(self.text_size.0 - disp_len).collect::<String>().as_str());
-            }
-            else if disp_len > self.text_size.0 {
-                line = line.graphemes(true).take(self.text_size.0).collect();
             }
 
             let mut ranges = highlight_lines.highlight_line(&line, &self.syntax_set).unwrap();
             
+            if grapheme_count > disp_len {
+                (_,ranges) = syntect::util::split_at(&ranges[..], self.display_rightmost_index)    
+            }
+            if disp_len > self.text_size.0 {
+                (ranges,_) = syntect::util::split_at(&ranges[..], self.text_size.0);
+            }
+            
             if file_line_num >= self.display_top_line_index {
-                if self.show_cursor && file_line_num == self.cursor_line_index {
-                    let cursor_char_index = self.cursor_char_index();
+                if self.show_cursor 
+                    && file_line_num == self.cursor_line_index 
+                    && self.cursor_index >= self.display_rightmost_index
+                    && self.cursor_index < self.display_rightmost_index + self.text_size.0 + 1
+                {
+                    let cursor_char_index = self.cursor_char_index() - self.display_rightmost_char_index(file_line_num);
                     use syntect::highlighting::*;
                     ranges = syntect::util::modify_range(&ranges, cursor_char_index..cursor_char_index+1, 
                         StyleModifier { 

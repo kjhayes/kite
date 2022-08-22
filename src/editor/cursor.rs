@@ -14,12 +14,20 @@ impl Editor {
         }
     }
 
-    pub (super) fn cursor_char_index(&self) -> usize {
-        let cursor_char_index = self.cursor_current_line()
+    pub (super) fn char_index(&self, line_index: usize, grapheme_index: usize) -> Option<usize> {
+        let cursor_char = self.line_at_index(line_index)?
             .graphemes(true)
-            .take(self.cursor_index)
+            .take(grapheme_index)
             .fold(0, |acc,val|{acc + val.chars().count()});
-        cursor_char_index
+        Some(cursor_char)
+    }
+
+    pub (super) fn cursor_char_index(&self) -> usize {
+        self.char_index(self.cursor_line_index, self.cursor_index).unwrap()
+    }
+
+    pub (super) fn display_rightmost_char_index(&self, line_index: usize) -> usize {
+        self.char_index(line_index, self.display_rightmost_index).unwrap()
     }
 
     pub (super) fn collapse_preference(&mut self) {
@@ -50,6 +58,7 @@ impl Editor {
     pub (super) fn move_cursor_right(&mut self) {
         if self.cursor_index < self.lines.iter().skip(self.cursor_line_index).next().unwrap().len() {
             self.cursor_index += 1;
+            if self.display_shifted_by_cursor {self.clamp_display_to_cursor(); }
             self.collapse_preference();
         } else if self.cursor_line_index < self.lines.iter().count() - 1 {
             self.move_cursor_down();
@@ -59,6 +68,7 @@ impl Editor {
     pub (super) fn move_cursor_left(&mut self) -> bool {
         if self.cursor_index > 0 {
             self.cursor_index -= 1;
+            if self.display_shifted_by_cursor {self.clamp_display_to_cursor(); }
             self.collapse_preference();
             return true;
         } else if self.cursor_line_index > 0 {
@@ -157,12 +167,18 @@ impl Editor {
         self.display_top_line_index = if self.display_top_line_index == 0 {0} else {self.display_top_line_index-1};
     }
     pub (super) fn clamp_display_to_cursor(&mut self) {
-        let max_displayed_line_index = self.display_top_line_index + (self.text_size.1 as usize - 1);
+        let max_displayed_line_index = self.display_top_line_index + (self.text_size.1 - 1);
         let min_displayed_line_index = self.display_top_line_index;
         if self.cursor_line_index < min_displayed_line_index {
             self.display_top_line_index = self.cursor_line_index;
         } else if self.cursor_line_index > max_displayed_line_index {
-            self.display_top_line_index = self.cursor_line_index - (self.text_size.1 as usize - 1);
+            self.display_top_line_index = self.cursor_line_index - (self.text_size.1 - 1);
+        }
+
+        if self.cursor_index < self.display_rightmost_index {
+            self.display_rightmost_index = self.cursor_index;    
+        } else if self.cursor_index > self.display_rightmost_index + (self.text_size.0 - 1) {
+            self.display_rightmost_index = self.cursor_index - (self.text_size.0 - 1);
         }
     }
 
