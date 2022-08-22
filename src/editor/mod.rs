@@ -70,7 +70,7 @@ impl Default for Editor {
             use_crlf: true,
             num_spaces_per_tab: 4,
 
-            syntax_set: SyntaxSet::load_defaults_newlines(),
+            syntax_set: SyntaxSet::load_defaults_nonewlines(),
             theme_set: ThemeSet::load_defaults(),
             use_theme_background: true,
         }
@@ -103,4 +103,3 @@ impl Editor {
     }
 
 }
-

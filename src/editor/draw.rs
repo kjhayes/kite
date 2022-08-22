@@ -1,9 +1,9 @@
-use std::{io::Write, default};
+use std::{io::Write};
 
 use super::Editor;
 
 use crossterm::{*, style::{Print}};
-use syntect::{easy::HighlightLines, highlighting::StyleModifier};
+use syntect::{easy::HighlightLines};
 use unicode_segmentation::UnicodeSegmentation;
 
 impl Editor {
